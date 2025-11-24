@@ -77,12 +77,16 @@ def clustering_kmeans(n_total, d, k, seed, centroids, iteracion_maxima=100, tole
     size = comm.Get_size()
 
     data = generate_distributed_data(n_total, d, k, seed)
-    print("__________________PUNTOS GENERADOS______________________")
-    print(data)
-    print("________________________________________________________________")
+    #print("__________________PUNTOS GENERADOS______________________")
+    #print(data)
+    #print("________________________________________________________________")
+
+    comm.Barrier()
+    t0 = MPI.Wtime()
+
     comm.Bcast(centroids, root=0)
     for i in range(iteracion_maxima):
-        print("iteración:", i)
+        #print("iteración:", i)
         parar = False
         centroide_pasado = centroids.copy()
 
@@ -109,7 +113,13 @@ def clustering_kmeans(n_total, d, k, seed, centroids, iteracion_maxima=100, tole
             break
         
         comm.Bcast(centroids, root=0)
-        #######################################}
+        
+    comm.Barrier()
+    t1 = MPI.Wtime()
+
+    # Solo rank 0 imprime tiempo
+    if rank == 0:
+        print(f"TOTAL_TIME,{t1 - t0}")
     return centroids
         
 # x = generate_distributed_data(4, 1, 1, 666 )
@@ -119,14 +129,11 @@ def clustering_kmeans(n_total, d, k, seed, centroids, iteracion_maxima=100, tole
 # print(y)
 
 n_total = 4000000
-d = 2
+d = 20
 k = 20
 seed = 100
 
-centroids = np.array([
-    [0.1, 0.9],   # Cerca del primer punto
-    [0.6, 0.3]    # Cerca del tercero
-])
+centroids = np.random.rand(k, d)
 
 
 centroidee = clustering_kmeans(n_total,d,k,seed, centroids)
